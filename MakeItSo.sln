@@ -16,6 +16,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolutionParser_VS2008", "So
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolutionParser_VS2010", "SolutionParser_VS2010\SolutionParser_VS2010.csproj", "{9194750C-6492-44AF-B18C-4247AC16D32B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolutionParser_VS2012", "SolutionParser_VS2012\SolutionParser_VS2012.csproj", "{A8F7E8F2-7D3C-4E9B-9A1F-8C2D5E6F7A8B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -42,6 +44,10 @@ Global
 		{9194750C-6492-44AF-B18C-4247AC16D32B}.Debug|x86.Build.0 = Debug|x86
 		{9194750C-6492-44AF-B18C-4247AC16D32B}.Release|x86.ActiveCfg = Release|x86
 		{9194750C-6492-44AF-B18C-4247AC16D32B}.Release|x86.Build.0 = Release|x86
+		{A8F7E8F2-7D3C-4E9B-9A1F-8C2D5E6F7A8B}.Debug|x86.ActiveCfg = Debug|x86
+		{A8F7E8F2-7D3C-4E9B-9A1F-8C2D5E6F7A8B}.Debug|x86.Build.0 = Debug|x86
+		{A8F7E8F2-7D3C-4E9B-9A1F-8C2D5E6F7A8B}.Release|x86.ActiveCfg = Release|x86
+		{A8F7E8F2-7D3C-4E9B-9A1F-8C2D5E6F7A8B}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
