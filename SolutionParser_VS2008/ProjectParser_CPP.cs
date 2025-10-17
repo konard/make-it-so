@@ -118,7 +118,13 @@ namespace SolutionParser_VS2008
             }
 
             // The configuration name...
-            configurationInfo.Name = Utils.call(() => (vcConfiguration.ConfigurationName));
+            // Get target name (e.g. Release|Win32)
+            string pipeString = Utils.call(() => (vcConfiguration.Name));
+            // Replace '|' with '_'
+            var pipe_index = pipeString.IndexOf("|");
+            configurationInfo.Name = pipeString.Substring(0, pipe_index);
+            configurationInfo.Name += "_";
+            configurationInfo.Name += pipeString.Substring(pipe_index + 1);
 
             // The project type. 
             // Note: we are assuming that all the configurations for the project build the
