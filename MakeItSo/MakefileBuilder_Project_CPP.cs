@@ -520,7 +520,7 @@ namespace MakeItSo
             string objectFiles = "";
             foreach (string filename in m_projectInfo.getFiles())
             {
-                string path = String.Format("{0}/{1}", intermediateFolder, filename);
+                string path = getObjectPathFromSourceFile(intermediateFolder, filename);
                 string objectPath = Path.ChangeExtension(path, ".o");
                 objectFiles += (objectPath + " ");
                 dependencies += (objectPath + " ");
@@ -611,9 +611,9 @@ namespace MakeItSo
             // We write a section of the makefile to compile each file...
             foreach (string filename in m_projectInfo.getFiles())
             {
-                // We work out the filename, the object filename and the 
+                // We work out the filename, the object filename and the
                 // dependencies filename...
-                string path = String.Format("{0}/{1}", intermediateFolder, filename);
+                string path = getObjectPathFromSourceFile(intermediateFolder, filename);
                 string objectPath = Path.ChangeExtension(path, ".o");
                 string dependenciesPath = Path.ChangeExtension(path, ".d");
 
@@ -646,7 +646,25 @@ namespace MakeItSo
             {
                 string intermediateFolder = getIntermediateFolder(configuration);
                 string outputFolder = getOutputFolder(configuration);
-                m_file.WriteLine("\tmkdir -p {0}/source", intermediateFolder);
+
+                // Create the base intermediate folder
+                m_file.WriteLine("\tmkdir -p {0}", intermediateFolder);
+
+                // Create subdirectories within the intermediate folder for any source files
+                // that are in subdirectories
+                HashSet<string> createdDirs = new HashSet<string>();
+                foreach (string filename in m_projectInfo.getFiles())
+                {
+                    string path = getObjectPathFromSourceFile(intermediateFolder, filename);
+                    string directory = Path.GetDirectoryName(path);
+
+                    if (!string.IsNullOrEmpty(directory) && !createdDirs.Contains(directory))
+                    {
+                        m_file.WriteLine("\tmkdir -p {0}", directory);
+                        createdDirs.Add(directory);
+                    }
+                }
+
                 if (outputFolder != intermediateFolder)
                 {
                     m_file.WriteLine("\tmkdir -p {0}", getOutputFolder(configuration));
@@ -704,6 +722,26 @@ namespace MakeItSo
         {
             string prefix = MakeItSoConfig.Instance.getProjectConfig(m_projectInfo.Name).CPPFolderPrefix;
             return Utils.addPrefixToFolderPath(configuration.OutputFolder, prefix);
+        }
+
+        /// <summary>
+        /// Converts a source file path to an object file path suitable for the intermediate folder.
+        /// This handles relative paths (like ../src/file.c) by normalizing them to avoid
+        /// creating invalid paths like "gccDebug/../src/file.o".
+        /// </summary>
+        private string getObjectPathFromSourceFile(string intermediateFolder, string sourceFilename)
+        {
+            // Normalize the path by replacing path separators and removing relative navigation
+            string normalizedPath = sourceFilename.Replace('\\', '/');
+
+            // Remove leading ../ and ./ sequences, and replace internal ones with underscores
+            // to avoid directory traversal in the intermediate folder
+            normalizedPath = normalizedPath.Replace("../", "").Replace("./", "");
+
+            // Combine with intermediate folder
+            string path = String.Format("{0}/{1}", intermediateFolder, normalizedPath);
+
+            return path;
         }
 
         #endregion

@@ -1,0 +1,10 @@
+MSBuild version 17.8.43+f0cbb1397 for .NET
+MSBUILD : error MSB4025: The project file could not be loaded. Root element is missing.
+
+Build FAILED.
+
+MSBUILD : error MSB4025: The project file could not be loaded. Root element is missing.
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:00.17
