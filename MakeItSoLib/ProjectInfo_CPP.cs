@@ -243,14 +243,21 @@ namespace MakeItSoLib
         }
 
         /// <summary>
-        /// Finds extra libraries that this executable project needs to link 
+        /// Finds extra libraries that this executable project needs to link
         /// as the result of dependencies.
         /// </summary>
         private void findImplicitlyLinkedLibraries(List<ImplicitLinkInfo> infos)
         {
             // We loop through the projects that this project depends on...
-            foreach (ProjectInfo_CPP requiredProject in getRequiredProjects())
+            foreach (ProjectInfo requiredProjectBase in getRequiredProjects())
             {
+                // We only process C++ projects (skip C# and other project types)...
+                ProjectInfo_CPP requiredProject = requiredProjectBase as ProjectInfo_CPP;
+                if (requiredProject == null)
+                {
+                    continue;
+                }
+
                 // Is the required project a static library?
                 if (requiredProject.ProjectType != ProjectTypeEnum.CPP_STATIC_LIBRARY
                     &&
@@ -287,8 +294,15 @@ namespace MakeItSoLib
         private void findImplicitlyLinkedObjectFiles(List<ImplicitLinkInfo> infos)
         {
             // We loop through the projects that this project depends on...
-            foreach (ProjectInfo_CPP requiredProject in getRequiredProjects())
+            foreach (ProjectInfo requiredProjectBase in getRequiredProjects())
             {
+                // We only process C++ projects (skip C# and other project types)...
+                ProjectInfo_CPP requiredProject = requiredProjectBase as ProjectInfo_CPP;
+                if (requiredProject == null)
+                {
+                    continue;
+                }
+
                 // Is the required project a static library?
                 if (requiredProject.ProjectType != ProjectTypeEnum.CPP_STATIC_LIBRARY)
                 {
