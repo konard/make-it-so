@@ -123,13 +123,23 @@ namespace MakeItSoLib
             }
             else
             {
-                // The to-path is absolute, so we try to find the relative path 
+                // The to-path is absolute, so we try to find the relative path
                 // from the root from-path...
-                Uri fromUri = new Uri(fromPath);
-                Uri toUri = new Uri(toPath);
+                try
+                {
+                    Uri fromUri = new Uri(fromPath);
+                    Uri toUri = new Uri(toPath);
 
-                Uri relativeUri = fromUri.MakeRelativeUri(toUri);
-                relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+                    Uri relativeUri = fromUri.MakeRelativeUri(toUri);
+                    relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+                }
+                catch (UriFormatException)
+                {
+                    // If the path contains invalid URI characters (like unresolved
+                    // environment variables or other invalid path tokens), we fall back
+                    // to a simpler path conversion approach
+                    relativePath = toPath.Replace('\\', '/');
+                }
             }
 
             // If the paths are the same, we return a "."
