@@ -104,6 +104,15 @@ namespace MakeItSoLib
         }
 
         /// <summary>
+        /// Gets the list of configurations to include (e.g., "Debug", "Release").
+        /// If null or empty, all configurations are included.
+        /// </summary>
+        public List<string> ConfigurationsToInclude
+        {
+            get { return m_configurationsToInclude; }
+        }
+
+        /// <summary>
         /// Returns config for the project passed in if we have specific config 
         /// for it. Returns the all-projects config if we don't.
         /// </summary>
@@ -199,6 +208,10 @@ namespace MakeItSoLib
                             parseCommandLine_BuildArgs(value);
                             break;
 
+                        case "-configurations":
+                            parseCommandLine_Configurations(value);
+                            break;
+
                         default:
                             showHelp = true;
                             break;
@@ -215,10 +228,11 @@ namespace MakeItSoLib
                 Log.log("See http://code.google.com/p/make-it-so/");
                 Log.log("");
                 Log.log("Command-line:");
-                Log.log("   (empty command-line)            Converts the .sln file in the working folder, if there is one.");
-                Log.log("   -file=[solution-file]           Converts the solution specified.");
-                Log.log("   -cygwin=[True/False]            Creates a cygwin makefile if True. Defaults to False.");
-                Log.log("   -build-args=[arg1,arg2,...]     Adds build arguments to gcc");
+                Log.log("   (empty command-line)                  Converts the .sln file in the working folder, if there is one.");
+                Log.log("   -file=[solution-file]                 Converts the solution specified.");
+                Log.log("   -cygwin=[True/False]                  Creates a cygwin makefile if True. Defaults to False.");
+                Log.log("   -build-args=[arg1,arg2,...]           Adds build arguments to gcc");
+                Log.log("   -configurations=[config1,config2,...] Only generates specified configurations (e.g., Debug, Release)");
                 Log.log("---------------------------------------------------------------------------------");
 
                 m_convertSolution = false;
@@ -260,6 +274,14 @@ namespace MakeItSoLib
             m_buildArguments = Utils.split(value, ',');
         }
 
+		/// <summary>
+		/// Parses the configurations list given by the user
+		/// </summary>
+        private void parseCommandLine_Configurations(string value)
+        {
+            m_configurationsToInclude = Utils.split(value, ',');
+        }
+
         /// <summary>
         /// We parse the MakeItSo.config file.
         /// </summary>
@@ -285,6 +307,9 @@ namespace MakeItSoLib
 
             // We find any projects to be ignored...
             parseIgnoredProjects(rootNode);
+
+            // We parse configuration filter settings...
+            parseConfigurationsToInclude(rootNode);
         }
 
         /// <summary>
@@ -341,6 +366,23 @@ namespace MakeItSoLib
             }
         }
 
+        /// <summary>
+        /// Parses the configuration filter from the config file.
+        /// </summary>
+        private void parseConfigurationsToInclude(XmlNode rootNode)
+        {
+            // We find the ConfigurationsToInclude node...
+            XmlNode configurationsNode = rootNode.SelectSingleNode("ConfigurationsToInclude");
+            if (configurationsNode != null)
+            {
+                XmlAttribute configurationsAttribute = configurationsNode.Attributes["configurations"];
+                if (configurationsAttribute != null)
+                {
+                    m_configurationsToInclude = Utils.split(configurationsAttribute.Value, ',');
+                }
+            }
+        }
+
 
 
         #endregion
@@ -372,9 +414,13 @@ namespace MakeItSoLib
         // Will be set false if we can't parse the command-line...
         private bool m_convertSolution = true;
 
-        // Collection of projects that should be ignored, ie removed 
+        // Collection of projects that should be ignored, ie removed
         // from the solution. (Held in lower-case.)
         private HashSet<string> m_projectsToIgnore = new HashSet<string>();
+
+        // List of configurations to include (e.g., Debug, Release).
+        // If null or empty, all configurations are included.
+        private List<string> m_configurationsToInclude = null;
 
         #endregion
     }

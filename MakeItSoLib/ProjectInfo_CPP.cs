@@ -157,6 +157,16 @@ namespace MakeItSoLib
         /// </summary>
         public List<ProjectConfigurationInfo_CPP> getConfigurationInfos()
         {
+            // Check if we need to filter configurations
+            List<string> configurationsToInclude = MakeItSoConfig.Instance.ConfigurationsToInclude;
+            if (configurationsToInclude != null && configurationsToInclude.Count > 0)
+            {
+                // Filter configurations based on the include list
+                return m_configurationInfos.FindAll(config =>
+                    configurationsToInclude.Exists(name =>
+                        config.Name.Equals(name, StringComparison.OrdinalIgnoreCase)));
+            }
+
             return m_configurationInfos;
         }
 
