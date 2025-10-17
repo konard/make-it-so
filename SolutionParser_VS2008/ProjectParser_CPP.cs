@@ -101,36 +101,23 @@ namespace SolutionParser_VS2008
             ProjectConfigurationInfo_CPP configurationInfo = new ProjectConfigurationInfo_CPP();
             configurationInfo.ParentProjectInfo = m_projectInfo;
 
-            IVCCollection sheets = Utils.call(() => (vcConfiguration.PropertySheets as IVCCollection));
-            int numSheets = Utils.call(() => (sheets.Count));
-            for (int i = 1; i <= numSheets; ++i)
-            {
-                VCPropertySheet sheet = Utils.call(() => (sheets.Item(i) as VCPropertySheet));
-
-                // 1. The thing is that VCPropertySheet and VCConfiguration have more-or-less
-                //    identical interfaces. So we should be able to merge them fairly easily.
-                //
-                // 2. We should try multiple layers of inheritance
-
-                IVCCollection tools = Utils.call(() => (sheet.Tools as IVCCollection));
-                VCCLCompilerTool compilerTool = Utils.call(() => (tools.Item("VCCLCompilerTool") as VCCLCompilerTool));
-
-            }
-
             // The configuration name...
             configurationInfo.Name = Utils.call(() => (vcConfiguration.ConfigurationName));
 
-            // The project type. 
+            // The project type.
             // Note: we are assuming that all the configurations for the project build the
-            //       same type of target. 
+            //       same type of target.
             m_projectInfo.ProjectType = parseConfiguration_Type(vcConfiguration);
 
             // We get the intermediates folder and output folder...
             configurationInfo.IntermediateFolder = parseConfiguration_Folder(vcConfiguration, () => (vcConfiguration.IntermediateDirectory));
             configurationInfo.OutputFolder = parseConfiguration_Folder(vcConfiguration, () => (vcConfiguration.OutputDirectory));
 
-            // We get compiler settings, such as the include path and 
-            // preprocessor definitions...
+            // First, parse inherited property sheets to get their settings...
+            parseConfiguration_PropertySheets(vcConfiguration, configurationInfo);
+
+            // Then parse the configuration's own compiler settings, which will be
+            // added to (or override) the property sheet settings...
             parseConfiguration_CompilerSettings(vcConfiguration, configurationInfo);
 
             // We get linker settings, such as any libs to link and the library path...
@@ -148,6 +135,57 @@ namespace SolutionParser_VS2008
 
             // We add the configuration to the collection of them for the project...
             m_projectInfo.addConfigurationInfo(configurationInfo);
+        }
+
+        /// <summary>
+        /// Parses settings from inherited property sheets.
+        /// Property sheets can contain compiler, linker, and other settings that should be
+        /// inherited by the configuration.
+        /// </summary>
+        private void parseConfiguration_PropertySheets(VCConfiguration vcConfiguration, ProjectConfigurationInfo_CPP configurationInfo)
+        {
+            IVCCollection sheets = Utils.call(() => (vcConfiguration.PropertySheets as IVCCollection));
+            if (sheets == null)
+            {
+                return;
+            }
+
+            int numSheets = Utils.call(() => (sheets.Count));
+            for (int i = 1; i <= numSheets; ++i)
+            {
+                VCPropertySheet sheet = Utils.call(() => (sheets.Item(i) as VCPropertySheet));
+                if (sheet == null)
+                {
+                    continue;
+                }
+
+                // Parse compiler settings from the property sheet...
+                IVCCollection tools = Utils.call(() => (sheet.Tools as IVCCollection));
+                if (tools != null)
+                {
+                    VCCLCompilerTool compilerTool = Utils.call(() => (tools.Item("VCCLCompilerTool") as VCCLCompilerTool));
+                    if (compilerTool != null)
+                    {
+                        // Parse include directories from property sheet
+                        parseCompilerSettings_IncludePath(vcConfiguration, compilerTool, configurationInfo);
+
+                        // Parse preprocessor definitions from property sheet
+                        parseCompilerSettings_PreprocessorDefinitions(vcConfiguration, compilerTool, configurationInfo);
+
+                        // Parse compiler flags from property sheet
+                        parseCompilerSettings_CompilerFlags(vcConfiguration, compilerTool, configurationInfo);
+                    }
+
+                    // Parse linker settings from the property sheet...
+                    VCLinkerTool linkerTool = Utils.call(() => (tools.Item("VCLinkerTool") as VCLinkerTool));
+                    if (linkerTool != null)
+                    {
+                        parseLinkerSettings_LibraryPath(vcConfiguration, linkerTool, configurationInfo);
+                        parseLinkerSettings_Libraries(vcConfiguration, linkerTool, configurationInfo);
+                        parseLinkerSettings_Misc(vcConfiguration, linkerTool, configurationInfo);
+                    }
+                }
+            }
         }
 
         /// <summary>
