@@ -93,9 +93,47 @@ namespace MakeItSo
                     continue;
                 }
                 int index = line.IndexOf("Version");
-                string strVersion = line.Substring(index + 8, 2);
-                int iVersion = Convert.ToInt32(strVersion);
-                return iVersion;
+                if (index < 0)
+                {
+                    continue;
+                }
+
+                // Extract the version string after "Version "
+                string versionPart = line.Substring(index + 7).Trim();
+
+                // Parse the version number (e.g., "10.00" -> 10, "11.00" -> 11)
+                // We look for the first sequence of digits
+                StringBuilder versionDigits = new StringBuilder();
+                foreach (char c in versionPart)
+                {
+                    if (char.IsDigit(c))
+                    {
+                        versionDigits.Append(c);
+                    }
+                    else if (versionDigits.Length > 0)
+                    {
+                        // Stop at the first non-digit after we've found digits
+                        break;
+                    }
+                }
+
+                if (versionDigits.Length > 0)
+                {
+                    try
+                    {
+                        int iVersion = Convert.ToInt32(versionDigits.ToString());
+                        Log.log(String.Format("Detected solution version: {0}", iVersion));
+                        return iVersion;
+                    }
+                    catch (FormatException ex)
+                    {
+                        Log.log(String.Format("Warning: Could not parse version '{0}': {1}", versionDigits.ToString(), ex.Message));
+                    }
+                    catch (OverflowException ex)
+                    {
+                        Log.log(String.Format("Warning: Version number '{0}' is too large: {1}", versionDigits.ToString(), ex.Message));
+                    }
+                }
             }
 
             throw new Exception("Could not find Version from the solution file");
