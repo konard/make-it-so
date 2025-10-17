@@ -148,7 +148,9 @@ namespace MakeItSo
 
                 // If we are creating a DLL, we need the create-position-indepent-code flag
                 // (unless this is a cygwin build, which doesn't)...
-                if (configuration.ParentProjectInfo.ProjectType == ProjectInfo_CPP.ProjectTypeEnum.CPP_DLL
+                // Also, if this is a static library that is used by a DLL, we need -fPIC
+                if ((configuration.ParentProjectInfo.ProjectType == ProjectInfo_CPP.ProjectTypeEnum.CPP_DLL
+                     || isStaticLibraryUsedByDLL())
                     &&
                     MakeItSoConfig.Instance.IsCygwinBuild == false)
                 {
@@ -704,6 +706,46 @@ namespace MakeItSo
         {
             string prefix = MakeItSoConfig.Instance.getProjectConfig(m_projectInfo.Name).CPPFolderPrefix;
             return Utils.addPrefixToFolderPath(configuration.OutputFolder, prefix);
+        }
+
+        /// <summary>
+        /// Checks if this static library project is used by any DLL projects.
+        /// If so, it needs to be compiled with -fPIC.
+        /// </summary>
+        private bool isStaticLibraryUsedByDLL()
+        {
+            // This check only applies to static libraries
+            if (m_projectInfo.ProjectType != ProjectInfo_CPP.ProjectTypeEnum.CPP_STATIC_LIBRARY)
+            {
+                return false;
+            }
+
+            // We check if any project in the solution that depends on this project is a DLL
+            foreach (ProjectInfo project in m_projectInfo.ParentSolution.getProjectInfos())
+            {
+                // Skip if not a C++ project
+                if (!(project is ProjectInfo_CPP))
+                {
+                    continue;
+                }
+
+                ProjectInfo_CPP cppProject = project as ProjectInfo_CPP;
+
+                // Check if this is a DLL project
+                if (cppProject.ProjectType == ProjectInfo_CPP.ProjectTypeEnum.CPP_DLL)
+                {
+                    // Check if this DLL depends on our static library
+                    foreach (ProjectInfo dependency in cppProject.getRequiredProjects())
+                    {
+                        if (dependency == m_projectInfo)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
 
         #endregion
