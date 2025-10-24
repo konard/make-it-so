@@ -97,6 +97,30 @@ namespace MakeItSoLib
         }
 
         /// <summary>
+        /// Returns all configurations that match the configuration name.
+        /// If configurationName is "All", returns all known configurations.
+        /// Otherwise returns the single configuration with that name.
+        /// </summary>
+        private List<string> expandConfigurationName(string configurationName)
+        {
+            List<string> result = new List<string>();
+
+            if (configurationName.Equals("All", StringComparison.OrdinalIgnoreCase))
+            {
+                // Return all known configurations
+                // Common configurations are Debug and Release
+                result.Add("Debug");
+                result.Add("Release");
+            }
+            else
+            {
+                result.Add(configurationName);
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Gets the C# compiler to use when building this project.
         /// </summary>
         public string CSharpCompiler
@@ -128,6 +152,22 @@ namespace MakeItSoLib
         public string CPPCompiler
         {
             get { return m_cppCompiler; }
+        }
+
+        /// <summary>
+        /// Gets the linker to use when building this project.
+        /// </summary>
+        public string Linker
+        {
+            get { return m_linker; }
+        }
+
+        /// <summary>
+        /// Gets the assembler to use when building this project.
+        /// </summary>
+        public string Assembler
+        {
+            get { return m_assembler; }
         }
 
         /// <summary>
@@ -228,6 +268,8 @@ namespace MakeItSoLib
             findCompiler(configNode, "CCompiler", ref m_cCompiler);
             findCompiler(configNode, "CSharpCompiler", ref m_csharpCompiler);
             findCompiler(configNode, "CSharpCompiler", ref m_cygwinCSharpCompiler);
+            findCompiler(configNode, "Linker", ref m_linker);
+            findCompiler(configNode, "Assembler", ref m_assembler);
         }
 
         /// <summary>
@@ -269,7 +311,13 @@ namespace MakeItSoLib
                 XmlAttribute configurationAttribute = addCompilerFlagNode.Attributes["configuration"];
                 XmlAttribute flagAttribute = addCompilerFlagNode.Attributes["flag"];
                 if (flagAttribute == null || configurationAttribute == null) continue;
-                getConfiguration(configurationAttribute.Value).addCompilerFlagToAdd(flagAttribute.Value);
+
+                // Support "All" configuration alias
+                List<string> configNames = expandConfigurationName(configurationAttribute.Value);
+                foreach (string configName in configNames)
+                {
+                    getConfiguration(configName).addCompilerFlagToAdd(flagAttribute.Value);
+                }
             }
         }
 
@@ -295,7 +343,13 @@ namespace MakeItSoLib
                 XmlAttribute configurationAttribute = addPreprocessorDefinitionNode.Attributes["configuration"];
                 XmlAttribute definitionAttribute = addPreprocessorDefinitionNode.Attributes["definition"];
                 if (definitionAttribute == null || configurationAttribute == null) continue;
-                getConfiguration(configurationAttribute.Value).addPreprocessorDefinitionToAdd(definitionAttribute.Value);
+
+                // Support "All" configuration alias
+                List<string> configNames = expandConfigurationName(configurationAttribute.Value);
+                foreach (string configName in configNames)
+                {
+                    getConfiguration(configName).addPreprocessorDefinitionToAdd(definitionAttribute.Value);
+                }
             }
         }
 
@@ -321,7 +375,13 @@ namespace MakeItSoLib
                 XmlAttribute configurationAttribute = addLibraryPathNode.Attributes["configuration"];
                 XmlAttribute pathAttribute = addLibraryPathNode.Attributes["path"];
                 if (pathAttribute == null || configurationAttribute == null) continue;
-                getConfiguration(configurationAttribute.Value).addLibraryPathToAdd(pathAttribute.Value);
+
+                // Support "All" configuration alias
+                List<string> configNames = expandConfigurationName(configurationAttribute.Value);
+                foreach (string configName in configNames)
+                {
+                    getConfiguration(configName).addLibraryPathToAdd(pathAttribute.Value);
+                }
             }
         }
 
@@ -347,7 +407,13 @@ namespace MakeItSoLib
                 XmlAttribute configurationAttribute = addIncludePathNode.Attributes["configuration"];
                 XmlAttribute pathAttribute = addIncludePathNode.Attributes["path"];
                 if (pathAttribute == null || configurationAttribute == null) continue;
-                getConfiguration(configurationAttribute.Value).addIncludePathToAdd(pathAttribute.Value);
+
+                // Support "All" configuration alias
+                List<string> configNames = expandConfigurationName(configurationAttribute.Value);
+                foreach (string configName in configNames)
+                {
+                    getConfiguration(configName).addIncludePathToAdd(pathAttribute.Value);
+                }
             }
         }
 
@@ -373,7 +439,13 @@ namespace MakeItSoLib
                 XmlAttribute configurationAttribute = addLibraryNode.Attributes["configuration"];
                 XmlAttribute libraryAttribute = addLibraryNode.Attributes["library"];
                 if (libraryAttribute == null || configurationAttribute == null) continue;
-                getConfiguration(configurationAttribute.Value).addLibraryToAdd(libraryAttribute.Value);
+
+                // Support "All" configuration alias
+                List<string> configNames = expandConfigurationName(configurationAttribute.Value);
+                foreach (string configName in configNames)
+                {
+                    getConfiguration(configName).addLibraryToAdd(libraryAttribute.Value);
+                }
             }
         }
 
@@ -450,6 +522,12 @@ namespace MakeItSoLib
 
         // The C++ compiler to use when building this project...
         private string m_cppCompiler = "g++";
+
+        // The linker to use when building this project...
+        private string m_linker = "g++";
+
+        // The assembler to use when building this project...
+        private string m_assembler = "as";
 
         // Whether we will convert static libraries to shared-objects libraries
         // for this project...
