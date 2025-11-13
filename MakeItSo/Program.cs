@@ -55,6 +55,10 @@ namespace MakeItSo
                         parser = loadParser("SolutionParser_VS2010.dll");
                         break;
 
+                    case 12:    // VS2012, VS2013, VS2015
+                        parser = loadParser("SolutionParser_VS2012.dll");
+                        break;
+
                     default:
                         throw new Exception("MakeItSo does not support this version of Visual Studio");
                 }
@@ -78,7 +82,7 @@ namespace MakeItSo
 
         /// <summary>
         /// Returns the solution version as a number, for example
-        /// 10 = VS2008, 11 = VS2010,
+        /// 10 = VS2008, 11 = VS2010, 12 = VS2012/VS2013/VS2015
         /// </summary>
         static int getSolutionVersion(string solutionFilename)
         {
