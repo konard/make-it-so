@@ -210,6 +210,10 @@ namespace SolutionParser_VS2010
 
                 // We loop through the required-projects, getting the name of each one...
                 object[] requiredProjects = Utils.call(() => (buildDependency.RequiredProjects as object[]));
+                if (requiredProjects == null)
+                {
+                    continue;
+                }
                 int numRequiredProjects = requiredProjects.Length;
                 for (int j = 0; j < numRequiredProjects; ++j)
                 {
