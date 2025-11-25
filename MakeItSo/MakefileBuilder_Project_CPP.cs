@@ -567,8 +567,10 @@ namespace MakeItSo
                         dllName = String.Format("lib{0}.so", m_projectInfo.Name);
                         pic = "-fPIC";
                     }
-                
-                    m_file.WriteLine("\tg++ {0} -shared -Wl,-soname,{1} -o {2}/{1} {3} {4}", pic, dllName, outputFolder, objectFiles, implicitlyLinkedObjectFiles);
+
+                    string dllLibraryPath = getLibraryPathVariableName(configurationInfo);
+                    string dllLibraries = getLibrariesVariableName(configurationInfo);
+                    m_file.WriteLine("\tg++ {0} -shared -Wl,-soname,{1} -o {2}/{1} {3} {4} $({5}) $({6})", pic, dllName, outputFolder, objectFiles, implicitlyLinkedObjectFiles, dllLibraryPath, dllLibraries);
                     break;
             }
 
