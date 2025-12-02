@@ -1,0 +1,65 @@
+Configuration Filter Feature - Usage Guide
+==========================================
+
+This feature addresses Issue #32: Add support to enable only Debug or Release configurations.
+
+By default, Make-it-So generates targets for both Debug and Release configurations, which
+results in both being compiled when launching a build. This can be a huge waste of time when
+building large projects.
+
+This feature adds an option to specify which configurations (Debug/Release) should be
+generated in the makefiles.
+
+USAGE OPTIONS
+=============
+
+1. Command-Line Option
+   --------------------
+   Use the -configurations parameter to specify which configurations to generate:
+
+   Example - Generate only Debug configuration:
+     MakeItSo.exe -file=MySolution.sln -configurations=Debug
+
+   Example - Generate only Release configuration:
+     MakeItSo.exe -file=MySolution.sln -configurations=Release
+
+   Example - Generate both (same as default):
+     MakeItSo.exe -file=MySolution.sln -configurations=Debug,Release
+
+2. Configuration File Option
+   --------------------------
+   Add the following to your MakeItSo.config file in the solution root:
+
+   For Debug only:
+     <ConfigurationsToInclude configurations="Debug"/>
+
+   For Release only:
+     <ConfigurationsToInclude configurations="Release"/>
+
+   For both (same as default):
+     <ConfigurationsToInclude configurations="Debug,Release"/>
+
+   Full example:
+     <MakeItSo>
+       <ConfigurationsToInclude configurations="Debug"/>
+       <AllProjects>
+         <!-- Other settings -->
+       </AllProjects>
+     </MakeItSo>
+
+BENEFITS
+========
+
+1. Faster build times - Only the configurations you need are compiled
+2. Reduced makefile complexity - Smaller, more focused makefiles
+3. Less disk space usage - Fewer intermediate and output files generated
+4. Flexibility - Easy to switch between configurations using command-line or config file
+
+NOTES
+=====
+
+- Configuration names are case-insensitive (e.g., "debug" and "Debug" are equivalent)
+- If no filter is specified, all configurations are generated (default behavior)
+- The filter applies to all projects in the solution
+- Multiple configurations can be specified by separating them with commas
+- Command-line settings override config file settings

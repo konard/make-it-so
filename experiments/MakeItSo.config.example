@@ -1,0 +1,19 @@
+<MakeItSo>
+
+  <!-- Example: Only generate Debug configuration -->
+  <ConfigurationsToInclude configurations="Debug"/>
+
+  <!-- Or, to generate only Release configuration, use:
+  <ConfigurationsToInclude configurations="Release"/>
+  -->
+
+  <!-- Or, to generate both Debug and Release (default behavior):
+  <ConfigurationsToInclude configurations="Debug,Release"/>
+  -->
+
+  <!-- Settings that apply to all projects in the solution -->
+  <AllProjects>
+    <!-- Your other settings here -->
+  </AllProjects>
+
+</MakeItSo>
