@@ -491,7 +491,9 @@ namespace MakeItSo
             // For example:
             //
             //   .PHONY: Debug
-            //   Debug: debug/main.o debug/math.o debug/utility.o
+            //   Debug: output/hello.exe
+            //
+            //   output/hello.exe: debug/main.o debug/math.o debug/utility.o
             //       g++ debug/main.o debug/math.o debug/utility.o -o output/hello.exe
 
             // The target name...
@@ -523,15 +525,55 @@ namespace MakeItSo
                 string path = String.Format("{0}/{1}", intermediateFolder, filename);
                 string objectPath = Path.ChangeExtension(path, ".o");
                 objectFiles += (objectPath + " ");
-                dependencies += (objectPath + " ");
             }
-
-            // We write the dependencies...
-            m_file.WriteLine("{0}: {1}", configurationInfo.Name, dependencies);
 
             // We find variables needed for the link step...
             string outputFolder = getOutputFolder(configurationInfo);
             string implicitlyLinkedObjectFiles = String.Format("$({0})", getImplicitlyLinkedObjectsVariableName(configurationInfo));
+
+            // Determine the output file name based on project type...
+            string outputFileName = "";
+            switch (m_projectInfo.ProjectType)
+            {
+                case ProjectInfo_CPP.ProjectTypeEnum.CPP_EXECUTABLE:
+                    outputFileName = String.Format("{0}/{1}.exe", outputFolder, m_projectInfo.Name);
+                    break;
+
+                case ProjectInfo_CPP.ProjectTypeEnum.CPP_STATIC_LIBRARY:
+                    if (configurationInfo.TargetName != "")
+                        outputFileName = String.Format("{0}/lib{1}.a", outputFolder, configurationInfo.TargetName);
+                    else
+                        outputFileName = String.Format("{0}/lib{1}.a", outputFolder, m_projectInfo.Name);
+                    break;
+
+                case ProjectInfo_CPP.ProjectTypeEnum.CPP_DLL:
+                    string dllExt = (MakeItSoConfig.Instance.IsCygwinBuild == true) ? "dll" : "so";
+                    outputFileName = String.Format("{0}/lib{1}.{2}", outputFolder, m_projectInfo.Name, dllExt);
+                    break;
+            }
+
+            // The .PHONY target depends on the output file...
+            dependencies += outputFileName;
+            m_file.WriteLine("{0}: {1}", configurationInfo.Name, dependencies);
+
+            // The post-build step for the phony target, if there is one...
+            if (configurationInfo.PostBuildEvent != "")
+            {
+                m_file.WriteLine("\t" + configurationInfo.PostBuildEvent);
+            }
+
+            m_file.WriteLine("");
+
+            // Now create the actual output file target with object file dependencies...
+            m_file.WriteLine("# Links the {0} output file...", configurationInfo.Name);
+            string objectDependencies = "";
+            foreach (string filename in m_projectInfo.getFiles())
+            {
+                string path = String.Format("{0}/{1}", intermediateFolder, filename);
+                string objectPath = Path.ChangeExtension(path, ".o");
+                objectDependencies += (objectPath + " ");
+            }
+            m_file.WriteLine("{0}: {1}", outputFileName, objectDependencies);
 
             // The link step...
             switch (m_projectInfo.ProjectType)
@@ -540,42 +582,31 @@ namespace MakeItSo
                 case ProjectInfo_CPP.ProjectTypeEnum.CPP_EXECUTABLE:
                     string libraryPath = getLibraryPathVariableName(configurationInfo);
                     string libraries = getLibrariesVariableName(configurationInfo);
-                    m_file.WriteLine("\tg++ {0} $({1}) $({2}) -Wl,-rpath,./ -o {3}/{4}.exe", objectFiles, libraryPath, libraries, outputFolder, m_projectInfo.Name);
+                    m_file.WriteLine("\tg++ {0} $({1}) $({2}) -Wl,-rpath,./ -o {3}", objectFiles, libraryPath, libraries, outputFileName);
                     break;
 
 
                 // Creates a static library...
                 case ProjectInfo_CPP.ProjectTypeEnum.CPP_STATIC_LIBRARY:
-					// We use the Target Name as the output file name if it exists
-                    if (configurationInfo.TargetName != "")
-                        m_file.WriteLine("\tar rcs {0}/lib{1}.a {2} {3}", outputFolder, configurationInfo.TargetName, objectFiles, implicitlyLinkedObjectFiles);
-                    else
-                        m_file.WriteLine("\tar rcs {0}/lib{1}.a {2} {3}", outputFolder, m_projectInfo.Name, objectFiles, implicitlyLinkedObjectFiles);
+                    m_file.WriteLine("\tar rcs {0} {1} {2}", outputFileName, objectFiles, implicitlyLinkedObjectFiles);
                     break;
 
 
                 // Creates a DLL (shared-objects) library...
                 case ProjectInfo_CPP.ProjectTypeEnum.CPP_DLL:
-                    string dllName, pic;
+                    string dllName = Path.GetFileName(outputFileName);
+                    string pic;
                     if(MakeItSoConfig.Instance.IsCygwinBuild == true)
                     {
-                        dllName = String.Format("lib{0}.dll", m_projectInfo.Name);
                         pic = "";
                     }
                     else
                     {
-                        dllName = String.Format("lib{0}.so", m_projectInfo.Name);
                         pic = "-fPIC";
                     }
-                
-                    m_file.WriteLine("\tg++ {0} -shared -Wl,-soname,{1} -o {2}/{1} {3} {4}", pic, dllName, outputFolder, objectFiles, implicitlyLinkedObjectFiles);
-                    break;
-            }
 
-            // The post-build step, if there is one...
-            if (configurationInfo.PostBuildEvent != "")
-            {
-                m_file.WriteLine("\t" + configurationInfo.PostBuildEvent);
+                    m_file.WriteLine("\tg++ {0} -shared -Wl,-soname,{1} -o {2} {3} {4}", pic, dllName, outputFileName, objectFiles, implicitlyLinkedObjectFiles);
+                    break;
             }
 
             m_file.WriteLine("");
