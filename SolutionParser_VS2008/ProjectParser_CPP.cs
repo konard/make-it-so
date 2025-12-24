@@ -287,7 +287,13 @@ namespace SolutionParser_VS2008
             // 4. Make sure all paths are relative to the project root folder
 
             // 1 & 2...
-            string strAdditionalLibraryDirectories = Utils.call(() => (linkerTool.AdditionalLibraryDirectories));
+            // Use IVCRulePropertyStorage to support inherited values from property sheets
+            IVCRulePropertyStorage rule = Utils.call(() => (vcConfiguration.Rules.Item("VCLinkerTool") as IVCRulePropertyStorage));
+            string strAdditionalLibraryDirectories = null;
+            if (rule != null)
+            {
+                strAdditionalLibraryDirectories = Utils.call(() => (rule.GetEvaluatedPropertyValue("AdditionalLibraryDirectories")));
+            }
             if (strAdditionalLibraryDirectories == null)
             {
                 return;
@@ -304,7 +310,8 @@ namespace SolutionParser_VS2008
                 }
 
                 // 3 & 4...
-                string resolvedPath = Utils.call(() => (vcConfiguration.Evaluate(unquotedLibraryDirectory)));
+                // The value is already evaluated, so we can use it directly
+                string resolvedPath = unquotedLibraryDirectory;
                 if (resolvedPath != "")
                 {
                     string relativePath = Utils.makeRelativePath(m_projectInfo.RootFolderAbsolute, resolvedPath);
@@ -409,7 +416,13 @@ namespace SolutionParser_VS2008
             // 4. Make sure all paths are relative to the project root folder
 
             // 1 & 2...
-            string strAdditionalIncludeDirectories = Utils.call(() => (compilerTool.AdditionalIncludeDirectories));
+            // Use IVCRulePropertyStorage to support inherited values from property sheets
+            IVCRulePropertyStorage rule = Utils.call(() => (vcConfiguration.Rules.Item("VCCLCompilerTool") as IVCRulePropertyStorage));
+            string strAdditionalIncludeDirectories = null;
+            if (rule != null)
+            {
+                strAdditionalIncludeDirectories = Utils.call(() => (rule.GetEvaluatedPropertyValue("AdditionalIncludeDirectories")));
+            }
             if (strAdditionalIncludeDirectories == null)
             {
                 return;
@@ -422,7 +435,8 @@ namespace SolutionParser_VS2008
                 string unquotedIncludeDirectory = additionalIncludeDirectory.Trim('"');
 
                 // 3 & 4...
-                string resolvedPath = Utils.call(() => (vcConfiguration.Evaluate(unquotedIncludeDirectory)));
+                // The value is already evaluated, so we can use it directly
+                string resolvedPath = unquotedIncludeDirectory;
                 if (resolvedPath != "")
                 {
                     string relativePath = Utils.makeRelativePath(m_projectInfo.RootFolderAbsolute, resolvedPath);
@@ -492,6 +506,10 @@ namespace SolutionParser_VS2008
             string pathWithSymbols = Utils.call(folderFn);
 
             // We resolve the symbols...
+            // Note: For configuration-level properties like IntermediateDirectory and OutputDirectory,
+            // vcConfiguration.Evaluate is still appropriate as these are not stored in property sheets
+            // in the same way as rule properties. However, this could be enhanced in the future
+            // to use IVCRulePropertyStorage for consistency if needed.
             string evaluatedPath = Utils.call(() => (vcConfiguration.Evaluate(pathWithSymbols)));
 
             // If we ave an absolute path, we convert it to a relative one...
