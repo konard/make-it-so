@@ -58,6 +58,13 @@ namespace MakeItSoLib
                     // while, and then try again...
                     Thread.Sleep(intervalMS);
                 }
+                catch (Exception ex)
+                {
+                    // We've caught a non-COM exception. This is not a transient error
+                    // that can be fixed by retrying, so we rethrow it immediately with
+                    // the original error message to help with debugging.
+                    throw new Exception(String.Format("Error calling function: {0}", ex.Message), ex);
+                }
             }
 
             throw new Exception(String.Format("'call' failed to call function after {0} tries.", numTries));
@@ -87,6 +94,13 @@ namespace MakeItSoLib
                     // a Server is Busy exception. So we sleep for a short
                     // while, and then try again...
                     Thread.Sleep(intervalMS);
+                }
+                catch (Exception ex)
+                {
+                    // We've caught a non-COM exception. This is not a transient error
+                    // that can be fixed by retrying, so we rethrow it immediately with
+                    // the original error message to help with debugging.
+                    throw new Exception(String.Format("Error calling function: {0}", ex.Message), ex);
                 }
             }
 
