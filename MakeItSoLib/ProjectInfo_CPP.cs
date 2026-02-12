@@ -26,16 +26,37 @@ namespace MakeItSoLib
         /// </summary>
         public void addFile(string file)
         {
-            m_files.Add(file);
+            addFile(file, FileInfo.CompileAsType.Default);
         }
 
         /// <summary>
-        /// Gets the collection of files in the project. 
+        /// Adds a source file to the project with specific compilation type.
+        /// </summary>
+        public void addFile(string file, FileInfo.CompileAsType compileAs)
+        {
+            m_files.Add(file);
+            m_fileCompileTypes[file] = compileAs;
+        }
+
+        /// <summary>
+        /// Gets the collection of files in the project.
         /// File paths are relative to the project's root folder.
         /// </summary>
         public HashSet<string> getFiles()
         {
             return m_files;
+        }
+
+        /// <summary>
+        /// Gets the compilation type for a specific file.
+        /// </summary>
+        public FileInfo.CompileAsType getFileCompileType(string file)
+        {
+            if (m_fileCompileTypes.ContainsKey(file))
+            {
+                return m_fileCompileTypes[file];
+            }
+            return FileInfo.CompileAsType.Default;
         }
 
         /// <summary>
@@ -321,6 +342,9 @@ namespace MakeItSoLib
 
         // The collection of source files in the project...
         protected HashSet<string> m_files = new HashSet<string>();
+
+        // Map of file paths to their compilation types...
+        private Dictionary<string, FileInfo.CompileAsType> m_fileCompileTypes = new Dictionary<string, FileInfo.CompileAsType>();
 
         // The collection of configurations (debug, release)...
         private List<ProjectConfigurationInfo_CPP> m_configurationInfos = new List<ProjectConfigurationInfo_CPP>();

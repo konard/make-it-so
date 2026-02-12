@@ -611,18 +611,14 @@ namespace MakeItSo
             // We write a section of the makefile to compile each file...
             foreach (string filename in m_projectInfo.getFiles())
             {
-                // We work out the filename, the object filename and the 
+                // We work out the filename, the object filename and the
                 // dependencies filename...
                 string path = String.Format("{0}/{1}", intermediateFolder, filename);
                 string objectPath = Path.ChangeExtension(path, ".o");
                 string dependenciesPath = Path.ChangeExtension(path, ".d");
 
-                // We decide which compiler to use...
-                string compiler = "$(CPP_COMPILER)";
-                if (Path.GetExtension(filename).ToLower() == ".c")
-                {
-                    compiler = "$(C_COMPILER)";
-                }
+                // We decide which compiler to use based on the file's CompileAs setting
+                string compiler = getCompilerForFile(filename);
 
                 // We create the target...
                 m_file.WriteLine("# Compiles file {0} for the {1} configuration...", filename, configurationInfo.Name);
@@ -631,6 +627,36 @@ namespace MakeItSo
                 m_file.WriteLine("\t{0} {1} {2} -c {3} {4} -o {5}", compiler, preprocessorDefinitions, compilerFlags, filename, includePath, objectPath);
                 m_file.WriteLine("\t{0} {1} {2} -MM {3} {4} > {5}", compiler, preprocessorDefinitions, compilerFlags, filename, includePath, dependenciesPath);
                 m_file.WriteLine("");
+            }
+        }
+
+        /// <summary>
+        /// Determines which compiler to use for a file based on its extension and CompileAs setting.
+        /// </summary>
+        private string getCompilerForFile(string filename)
+        {
+            // Get the CompileAs setting for this file
+            MakeItSoLib.FileInfo.CompileAsType compileAs = m_projectInfo.getFileCompileType(filename);
+
+            // If there's an explicit CompileAs setting, use it
+            if (compileAs == MakeItSoLib.FileInfo.CompileAsType.CompileAsC)
+            {
+                return "$(C_COMPILER)";
+            }
+            else if (compileAs == MakeItSoLib.FileInfo.CompileAsType.CompileAsCpp)
+            {
+                return "$(CPP_COMPILER)";
+            }
+
+            // Otherwise, use the default behavior based on file extension
+            string extension = Path.GetExtension(filename).ToLower();
+            if (extension == ".c")
+            {
+                return "$(C_COMPILER)";
+            }
+            else
+            {
+                return "$(CPP_COMPILER)";
             }
         }
 

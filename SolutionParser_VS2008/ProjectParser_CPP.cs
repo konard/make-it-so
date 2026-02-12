@@ -532,7 +532,7 @@ namespace SolutionParser_VS2008
                 // We check if the file has a custom build rule...
                 parseCustomBuildRule(file);
 
-                // We find the extension, and see if it is one we treat 
+                // We find the extension, and see if it is one we treat
                 // as a source file...
                 switch (extension)
                 {
@@ -545,9 +545,68 @@ namespace SolutionParser_VS2008
                     case ".c++":
                         // We add it to the project...
                         string relativePath = Utils.makeRelativePath(m_projectInfo.RootFolderAbsolute, path);
-                        m_projectInfo.addFile(relativePath);
+
+                        // Check if the file has a specific CompileAs setting
+                        MakeItSoLib.FileInfo.CompileAsType compileAs = getFileCompileAsType(file);
+                        m_projectInfo.addFile(relativePath, compileAs);
                         break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets the CompileAs type for a file by checking its file-level configuration.
+        /// </summary>
+        private MakeItSoLib.FileInfo.CompileAsType getFileCompileAsType(VCFile file)
+        {
+            try
+            {
+                // We check the first configuration to get the CompileAs setting
+                // (assuming all configurations have the same setting for this file)
+                IVCCollection configurations = Utils.call(() => (file.FileConfigurations as IVCCollection));
+                if (configurations == null)
+                {
+                    return MakeItSoLib.FileInfo.CompileAsType.Default;
+                }
+
+                int numConfigurations = Utils.call(() => (configurations.Count));
+                if (numConfigurations == 0)
+                {
+                    return MakeItSoLib.FileInfo.CompileAsType.Default;
+                }
+
+                // Get the first configuration
+                VCFileConfiguration fileConfig = Utils.call(() => (configurations.Item(1) as VCFileConfiguration));
+                if (fileConfig == null)
+                {
+                    return MakeItSoLib.FileInfo.CompileAsType.Default;
+                }
+
+                // Get the compiler tool for this file configuration
+                VCCLCompilerTool compilerTool = Utils.call(() => (fileConfig.Tool as VCCLCompilerTool));
+                if (compilerTool == null)
+                {
+                    return MakeItSoLib.FileInfo.CompileAsType.Default;
+                }
+
+                // Get the CompileAs property
+                // compileAsDefault = 0, compileAsC = 1, compileAsCpp = 2
+                compileAsManagedOptions compileAsOption = Utils.call(() => (compilerTool.CompileAs));
+
+                switch (compileAsOption)
+                {
+                    case compileAsManagedOptions.compileAsC:
+                        return MakeItSoLib.FileInfo.CompileAsType.CompileAsC;
+                    case compileAsManagedOptions.compileAsCpp:
+                        return MakeItSoLib.FileInfo.CompileAsType.CompileAsCpp;
+                    default:
+                        return MakeItSoLib.FileInfo.CompileAsType.Default;
+                }
+            }
+            catch
+            {
+                // If we can't read the property, use default behavior
+                return MakeItSoLib.FileInfo.CompileAsType.Default;
             }
         }
 

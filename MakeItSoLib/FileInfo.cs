@@ -12,11 +12,22 @@ namespace MakeItSoLib
     public class FileInfo
     {
         /// <summary>
+        /// Enum for how a file should be compiled.
+        /// </summary>
+        public enum CompileAsType
+        {
+            Default,        // Use default based on file extension
+            CompileAsC,     // Compile as C code
+            CompileAsCpp    // Compile as C++ code
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         public FileInfo()
         {
             IsFromAProjectOutputFolder = false;
+            CompileAs = CompileAsType.Default;
         }
 
         /// <summary>
@@ -29,6 +40,7 @@ namespace MakeItSoLib
             result.CopyToOutputFolder = CopyToOutputFolder;
             result.RelativePath = RelativePath;
             result.IsFromAProjectOutputFolder = IsFromAProjectOutputFolder;
+            result.CompileAs = CompileAs;
             return result;
         }
 
@@ -64,5 +76,10 @@ namespace MakeItSoLib
         {
             get { return Path.GetExtension(AbsolutePath); }
         }
+
+        /// <summary>
+        /// Gets or sets how this file should be compiled (C vs C++).
+        /// </summary>
+        public CompileAsType CompileAs { get; set; }
     }
 }
