@@ -518,8 +518,15 @@ namespace MakeItSo
             // The object files the target depends on...
             string intermediateFolder = getIntermediateFolder(configurationInfo);
             string objectFiles = "";
+            HashSet<string> excludedFiles = configurationInfo.getExcludedFiles();
             foreach (string filename in m_projectInfo.getFiles())
             {
+                // Skip files that are excluded from this configuration's build...
+                if (excludedFiles.Contains(filename))
+                {
+                    continue;
+                }
+
                 string path = String.Format("{0}/{1}", intermediateFolder, filename);
                 string objectPath = Path.ChangeExtension(path, ".o");
                 objectFiles += (objectPath + " ");
@@ -609,8 +616,15 @@ namespace MakeItSo
             string compilerFlags = String.Format("$({0})", getCompilerFlagsVariableName(configurationInfo));
 
             // We write a section of the makefile to compile each file...
+            HashSet<string> excludedFiles = configurationInfo.getExcludedFiles();
             foreach (string filename in m_projectInfo.getFiles())
             {
+                // Skip files that are excluded from this configuration's build...
+                if (excludedFiles.Contains(filename))
+                {
+                    continue;
+                }
+
                 // We work out the filename, the object filename and the 
                 // dependencies filename...
                 string path = String.Format("{0}/{1}", intermediateFolder, filename);

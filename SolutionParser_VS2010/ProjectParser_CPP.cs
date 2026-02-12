@@ -534,7 +534,39 @@ namespace SolutionParser_VS2010
                         // We add it to the project...
                         string relativePath = Utils.makeRelativePath(m_projectInfo.RootFolderAbsolute, path);
                         m_projectInfo.addFile(relativePath);
+
+                        // Check if the file is excluded from build in any configuration...
+                        parseFileExclusionSettings(file, relativePath);
                         break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if the file is excluded from build in any configuration.
+        /// </summary>
+        private void parseFileExclusionSettings(VCFile file, string relativePath)
+        {
+            // The exclusion settings are per configuration. So we loop through
+            // the configurations for this file...
+            IVCCollection configurations = Utils.call(() => (file.FileConfigurations as IVCCollection));
+            int numConfigurations = Utils.call(() => (configurations.Count));
+            for (int i = 1; i <= numConfigurations; ++i)
+            {
+                // We check the ExcludedFromBuild property for each configuration...
+                VCFileConfiguration configuration = Utils.call(() => (configurations.Item(i) as VCFileConfiguration));
+                bool excludedFromBuild = Utils.call(() => (configuration.ExcludedFromBuild));
+
+                if (excludedFromBuild == true)
+                {
+                    // This file is excluded from this configuration's build.
+                    // We need to add it to the configuration's excluded files list...
+                    string configurationName = Utils.call(() => (configuration.Name));
+                    ProjectConfigurationInfo_CPP configurationInfo = m_projectInfo.getConfigurationInfos().Find((cfg) => (cfg.Name == configurationName));
+                    if (configurationInfo != null)
+                    {
+                        configurationInfo.addExcludedFile(relativePath);
+                    }
                 }
             }
         }

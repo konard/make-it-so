@@ -267,6 +267,22 @@ namespace MakeItSoLib
             set { m_postBuildEvent = value; }
         }
 
+        /// <summary>
+        /// Adds a file to the collection of files excluded from this configuration's build.
+        /// </summary>
+        public void addExcludedFile(string file)
+        {
+            m_excludedFiles.Add(file);
+        }
+
+        /// <summary>
+        /// Gets the collection of files excluded from this configuration's build.
+        /// </summary>
+        public HashSet<string> getExcludedFiles()
+        {
+            return m_excludedFiles;
+        }
+
         #endregion
 
         #region Private data
@@ -311,10 +327,13 @@ namespace MakeItSoLib
         // The collection of custom build rules for this configuration...
         private List<CustomBuildRuleInfo_CPP> m_customBuildRuleInfos = new List<CustomBuildRuleInfo_CPP>();
 
-        // Pre- and post- build events. These will be a path to a .sh file if 
+        // Pre- and post- build events. These will be a path to a .sh file if
         // an event is set up...
         private string m_preBuildEvent = "";
         private string m_postBuildEvent = "";
+
+        // The collection of files excluded from this configuration's build...
+        private HashSet<string> m_excludedFiles = new HashSet<string>();
 
         #endregion
     }
