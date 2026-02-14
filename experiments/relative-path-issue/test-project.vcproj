@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="9.00"
+	Name="TestProject"
+	ProjectGUID="{12345678-1234-1234-1234-123456789012}"
+	RootNamespace="TestProject"
+	Keyword="Win32Proj"
+	>
+	<Platforms>
+		<Platform Name="Win32" />
+	</Platforms>
+	<Configurations>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
+			>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				MinimalRebuild="true"
+			/>
+			<Tool Name="VCLinkerTool" />
+		</Configuration>
+	</Configurations>
+	<Files>
+		<Filter Name="Source Files">
+			<File RelativePath="../src/foobar.c" />
+			<File RelativePath="main.cpp" />
+		</Filter>
+	</Files>
+</VisualStudioProject>
